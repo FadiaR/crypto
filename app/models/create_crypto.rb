@@ -1,0 +1,2 @@
+class CreateCrypto < ApplicationRecord
+end
