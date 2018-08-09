@@ -1,24 +1,40 @@
+  require 'rubygems'
+  require 'nokogiri'
+  require 'open-uri'
 
-require 'nokogiri'
-require 'open-uri'
-require 'pry'
+  class StartScrap
+  attr_accessor :url
+      def initialize
+          @url = "https://coinmarketcap.com/all/views/all/"
+      end
 
-class StartScrap
-  def perform
-    coin_list_url = 'https://coinmarketcap.com/all/views/all/'
-    page = Nokogiri::HTML(URI.open(coin_list_url))
-    @currencies = []
-    page.css('table#currencies-all tbody tr').each do |x|
-      name = x.css('td.currency-name')[0]['data-sort']
-      value = '$' + x.css('a.price')[0]['data-usd']
-      @currencies.push(name: name, price: value)
-    end
-    @currencies
+      def names
+        @names = []
+          doc = Nokogiri::HTML(open(@url)).css(".currency-name-container").each do |name|
+              @names.push(name.text)
+          end
+          return @names
+      end
+
+      def price
+        @price = []
+          doc = Nokogiri::HTML(open(@url)).css(".price").each do |price|
+              @price.push(price.text)
+          end
+          return @price
+      end
+
+      def save(hash)
+        CreateCrypto.delete_all
+        hash.each do |names, price|
+          CreateCrypto.create(name: names, value: price)
+        end
+      end
+
+      def perform
+          hash = Hash[names.zip(price)]
+          save(hash)
+          hash
+      end
+
   end
-
-def save
-  @currencies.each do |currency|
-    Crypto.create(name: currency.name, value: currency.price)
-  end
-end
-end
